@@ -1,5 +1,4 @@
-
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,15 +9,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-[#0b0f17] text-slate-100 font-sans min-h-screen p-3 md:p-6">
+<body class="bg-[#070a0f] text-slate-100 font-sans min-h-screen p-3 md:p-6">
 
-    <div class="max-w-4xl mx-auto space-y-5">
+    <div class="max-w-4xl mx-auto space-y-4">
         
         <!-- Header Section -->
-        <header class="flex flex-wrap items-center justify-between gap-4 bg-[#111827] p-4 rounded-2xl border border-slate-800/80 shadow-lg">
+        <header class="flex flex-wrap items-center justify-between gap-3 bg-[#0d131d] p-3.5 rounded-2xl border border-slate-800/80 shadow-lg">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg relative">
-                    C<span class="w-2.5 h-2.5 bg-rose-500 rounded-full absolute top-0 right-0 border-2 border-[#111827]"></span>
+                    C<span class="w-2.5 h-2.5 bg-rose-500 rounded-full absolute top-0 right-0 border-2 border-[#0d131d]"></span>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
@@ -31,54 +30,95 @@
 
             <div class="flex items-center gap-3">
                 <span class="hidden sm:flex items-center gap-1.5 text-xs bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 px-3 py-1.5 rounded-full font-medium">
-                    <i class="fa-solid font-bold fa-cloud-arrow-up"></i> Permanent Cloud Saved
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Permanent Cloud Saved
                 </span>
                 
                 <div class="text-right">
                     <div id="liveDate" class="text-[11px] font-semibold text-slate-400 tracking-wider">SAT, AUG 15, 2026</div>
-                    <div id="liveTime" class="text-emerald-400 font-mono text-lg font-bold">04:23:09 PM</div>
+                    <div id="liveTime" class="text-emerald-400 font-mono text-lg font-bold">04:21:11 PM</div>
                 </div>
 
-                <button class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center hover:bg-rose-500/30">
+                <button class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center">
                     <i class="fa-regular fa-bell"></i>
                 </button>
-                <button class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30">
+                <button class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
                     <i class="fa-solid fa-music"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Action Bar -->
-        <div class="flex justify-between items-center px-1">
+        <!-- 1. Today's Routine Card -->
+        <div class="bg-[#0d131d] p-4 rounded-2xl border border-slate-800/80 space-y-3">
+            <div class="flex justify-between items-center text-xs text-slate-400 font-semibold tracking-wider">
+                <span>TODAY'S ROUTINE</span>
+                <i class="fa-regular fa-calendar-check text-emerald-400 text-sm"></i>
+            </div>
+            <div class="flex justify-between items-baseline">
+                <div id="progressText" class="text-3xl font-extrabold text-white">0 / 8</div>
+                <span id="percentText" class="text-xs bg-emerald-950/60 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800/40 font-bold">0% Done</span>
+            </div>
+            <div class="w-full bg-slate-800/60 rounded-full h-2 overflow-hidden">
+                <div id="progressBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 2. Current Focus Slot Card -->
+        <div class="bg-[#0d131d] p-4 rounded-2xl border border-slate-800/80 relative overflow-hidden">
+            <div class="flex justify-between items-center text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                <span>CURRENT FOCUS SLOT</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+            </div>
+            <h3 id="focusTitle" class="text-base font-bold text-white">Evening Sports & Fitness</h3>
+            <p id="focusTime" class="text-xs text-rose-400 font-semibold mt-0.5">5:00 PM – 6:30 PM</p>
+            <div class="flex justify-between items-center mt-3 text-xs text-slate-400">
+                <span>Stay on track!</span>
+                <span id="focusTag" class="text-slate-400 font-medium">Sports</span>
+            </div>
+        </div>
+
+        <!-- 3. Alarms Engine Card -->
+        <div class="bg-[#0d131d] p-4 rounded-2xl border border-slate-800/80">
+            <div class="flex justify-between items-center text-xs text-slate-400 font-semibold tracking-wider mb-1">
+                <span>ALARMS ENGINE</span>
+                <i class="fa-solid fa-bell text-rose-400 text-sm"></i>
+            </div>
+            <div class="flex justify-between items-baseline">
+                <div id="activeAlarmsCount" class="text-2xl font-extrabold text-white">8 Active</div>
+                <span class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 font-medium">Background Sync Active</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Plays song melody when open; triggers System Ringtone & Vibration when closed.</p>
+        </div>
+
+        <!-- Timetable Schedule Section Header -->
+        <div class="flex justify-between items-center pt-2">
             <h2 class="text-base font-bold flex items-center gap-2 text-white">
                 <i class="fa-solid fa-list-check text-emerald-400"></i> Timetable Schedule
             </h2>
-            <button onclick="addRoutine()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/10 transition">
+            <button onclick="addRoutine()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/10 transition">
                 <i class="fa-solid fa-plus"></i> Add Routine
             </button>
         </div>
 
         <!-- Routine Slots Container -->
         <div id="routineList" class="space-y-3">
-            <!-- Dynamic UI elements load ikkade avthai -->
+            <!-- Dynamic Slots Load Avthai -->
         </div>
 
     </div>
 
-    <!-- JavaScript Engine -->
     <script>
-        // Initial Default Slots Data
         let defaultSlots = [
             { id: 1, title: 'Early Morning Wake Up', start: '05:30 AM', end: '06:00 AM', tag: 'Morning', icon: 'fa-sun', alarm: true, checked: false },
             { id: 2, title: 'Early Morning Workout', start: '06:00 AM', end: '07:30 AM', tag: 'Sports', icon: 'fa-volleyball', alarm: true, checked: false },
             { id: 3, title: 'Breakfast & Refreshment', start: '08:00 AM', end: '09:00 AM', tag: 'Meal', icon: 'fa-utensils', alarm: true, checked: false },
             { id: 4, title: 'College / Work Time', start: '09:00 AM', end: '01:00 PM', tag: 'College', icon: 'fa-graduation-cap', alarm: true, checked: false },
-            { id: 5, title: 'Lunch Time', start: '01:00 PM', end: '02:00 PM', tag: 'Meal', icon: 'fa-utensils', alarm: true, checked: false }
+            { id: 5, title: 'Lunch Time', start: '01:00 PM', end: '02:00 PM', tag: 'Meal', icon: 'fa-utensils', alarm: true, checked: false },
+            { id: 6, title: 'Evening Sports & Fitness', start: '05:00 PM', end: '06:30 PM', tag: 'Sports', icon: 'fa-dumbbell', alarm: true, checked: false }
         ];
 
         let slots = JSON.parse(localStorage.getItem('chandu_os_routines')) || defaultSlots;
 
-        // 1. Dynamic Live Clock & Date Update
+        // 1. Live Clock & Date
         function updateClock() {
             const now = new Date();
             const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
@@ -88,8 +128,7 @@
             let minutes = now.getMinutes();
             let seconds = now.getSeconds();
             let ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12;
-            hours = hours ? hours : 12;
+            hours = hours % 12 || 12;
             minutes = minutes < 10 ? '0' + minutes : minutes;
             seconds = seconds < 10 ? '0' + seconds : seconds;
             
@@ -98,14 +137,20 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 2. Render Slots to Match UI Screenshot
+        // 2. Main Render Engine
         function renderRoutines() {
             const container = document.getElementById('routineList');
             container.innerHTML = '';
+            
+            let completedCount = 0;
+            let activeAlarms = 0;
 
             slots.forEach((slot, index) => {
+                if (slot.checked) completedCount++;
+                if (slot.alarm) activeAlarms++;
+
                 container.innerHTML += `
-                    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#111827] p-3.5 rounded-2xl border border-slate-800/80 hover:border-slate-700 transition">
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#0d131d] p-3.5 rounded-2xl border border-slate-800/80 hover:border-slate-700 transition">
                         <div class="flex items-center gap-3 min-w-[240px]">
                             <input type="checkbox" ${slot.checked ? 'checked' : ''} onchange="toggleCheck(${index})" class="w-5 h-5 rounded-md border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 cursor-pointer">
                             <div class="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400">
@@ -136,10 +181,21 @@
                     </div>
                 `;
             });
+
+            // Update Progress Bar
+            const total = slots.length;
+            const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+            document.getElementById('progressText').innerText = `${completedCount} / ${total}`;
+            document.getElementById('percentText').innerText = `${percent}% Done`;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+
+            // Update Active Alarms Count
+            document.getElementById('activeAlarmsCount').innerText = `${activeAlarms} Active`;
+
             localStorage.setItem('chandu_os_routines', JSON.stringify(slots));
         }
 
-        // 3. Edit Time Function
+        // 3. User Actions
         function editTime(index) {
             const newStart = prompt("Start Time Enter Cheyandi (e.g. 05:30 AM):", slots[index].start);
             const newEnd = prompt("End Time Enter Cheyandi (e.g. 06:30 AM):", slots[index].end);
@@ -150,7 +206,6 @@
             }
         }
 
-        // 4. Add Routine Function
         function addRoutine() {
             const title = prompt("Routine Name Enter Cheyandi:", "Study Time");
             const start = prompt("Start Time (e.g. 05:00 PM):", "05:00 PM");
@@ -170,19 +225,16 @@
             }
         }
 
-        // 5. Toggle Alarm Function
         function toggleAlarm(index) {
             slots[index].alarm = !slots[index].alarm;
             renderRoutines();
         }
 
-        // 6. Toggle Checkbox
         function toggleCheck(index) {
             slots[index].checked = !slots[index].checked;
             renderRoutines();
         }
 
-        // 7. Delete Routine
         function deleteRoutine(index) {
             if (confirm("Ee Routine delete cheyalani anukuntunnara?")) {
                 slots.splice(index, 1);
