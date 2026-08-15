@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-[#070a0f] text-slate-100 font-sans min-h-screen p-3 md:p-6">
+<body class="bg-[#070a0f] text-slate-100 font-sans min-h-screen p-3 md:p-6" onclick="enableAudioEngine()">
 
     <div class="max-w-4xl mx-auto space-y-4">
         
@@ -38,7 +38,7 @@
                     <div id="liveTime" class="text-emerald-400 font-mono text-lg font-bold">04:21:11 PM</div>
                 </div>
 
-                <button class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center">
+                <button onclick="testAlarmSound()" class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center hover:bg-rose-500/40" title="Test Alarm Sound">
                     <i class="fa-regular fa-bell"></i>
                 </button>
                 <button class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
@@ -86,7 +86,7 @@
                 <div id="activeAlarmsCount" class="text-2xl font-extrabold text-white">8 Active</div>
                 <span class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 font-medium">Background Sync Active</span>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Plays song melody when open; triggers System Ringtone & Vibration when closed.</p>
+            <p class="text-xs text-slate-400 mt-2">Plays sound melody & vibration. Triggers System Notification when closed.</p>
         </div>
 
         <!-- Timetable Schedule Section Header -->
@@ -100,9 +100,7 @@
         </div>
 
         <!-- Routine Slots Container -->
-        <div id="routineList" class="space-y-3">
-            <!-- Dynamic Slots Load Avthai -->
-        </div>
+        <div id="routineList" class="space-y-3"></div>
 
     </div>
 
@@ -118,7 +116,40 @@
 
         let slots = JSON.parse(localStorage.getItem('chandu_os_routines')) || defaultSlots;
 
-        // 1. Live Clock & Date
+        let alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm.ogg');
+        alarmSound.volume = 1.0;
+
+        function enableAudioEngine() {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+            alarmSound.play().then(() => {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+            }).catch(() => {});
+        }
+
+        function testAlarmSound() {
+            enableAudioEngine();
+            triggerAlarm("Test Alarm Working!");
+        }
+
+        function triggerAlarm(title) {
+            alarmSound.volume = 1.0;
+            alarmSound.play();
+            
+            if ("vibrate" in navigator) {
+                navigator.vibrate([1000, 500, 1000, 500, 1000]);
+            }
+
+            if (Notification.permission === "granted") {
+                new Notification("⏰ CHANDU OS ALARM!", {
+                    body: title,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+                });
+            }
+        }
+
         function updateClock() {
             const now = new Date();
             const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
@@ -129,15 +160,26 @@
             let seconds = now.getSeconds();
             let ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            seconds = seconds < 10 ? '0' + seconds : seconds;
+            let formattedHours = hours.toString().padStart(2, '0');
+            let formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+            let formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
             
-            document.getElementById('liveTime').innerText = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            let currentTimeStr = `${formattedHours}:${formattedMinutes} ${ampm}`;
+            document.getElementById('liveTime').innerText = `${formattedHours}:${formattedMinutes}:${formattedSeconds} ${ampm}`;
+
+            if (seconds === 0) {
+                slots.forEach(slot => {
+                    if (slot.alarm && !slot.checked) {
+                        if (slot.start.trim() === currentTimeStr) {
+                            triggerAlarm(`It's time for: ${slot.title}`);
+                        }
+                    }
+                });
+            }
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 2. Main Render Engine
         function renderRoutines() {
             const container = document.getElementById('routineList');
             container.innerHTML = '';
@@ -182,23 +224,19 @@
                 `;
             });
 
-            // Update Progress Bar
             const total = slots.length;
             const percent = total > 0 ? Math.round((completedCount / total) * 100) : 0;
             document.getElementById('progressText').innerText = `${completedCount} / ${total}`;
             document.getElementById('percentText').innerText = `${percent}% Done`;
             document.getElementById('progressBar').style.width = `${percent}%`;
-
-            // Update Active Alarms Count
             document.getElementById('activeAlarmsCount').innerText = `${activeAlarms} Active`;
 
             localStorage.setItem('chandu_os_routines', JSON.stringify(slots));
         }
 
-        // 3. User Actions
         function editTime(index) {
-            const newStart = prompt("Start Time Enter Cheyandi (e.g. 05:30 AM):", slots[index].start);
-            const newEnd = prompt("End Time Enter Cheyandi (e.g. 06:30 AM):", slots[index].end);
+            const newStart = prompt("Start Time (e.g. 05:30 AM):", slots[index].start);
+            const newEnd = prompt("End Time (e.g. 06:30 AM):", slots[index].end);
             if (newStart && newEnd) {
                 slots[index].start = newStart;
                 slots[index].end = newEnd;
@@ -207,20 +245,11 @@
         }
 
         function addRoutine() {
-            const title = prompt("Routine Name Enter Cheyandi:", "Study Time");
+            const title = prompt("Routine Name:", "Study Time");
             const start = prompt("Start Time (e.g. 05:00 PM):", "05:00 PM");
             const end = prompt("End Time (e.g. 06:30 PM):", "06:30 PM");
             if (title && start && end) {
-                slots.push({
-                    id: Date.now(),
-                    title: title,
-                    start: start,
-                    end: end,
-                    tag: 'General',
-                    icon: 'fa-list-check',
-                    alarm: true,
-                    checked: false
-                });
+                slots.push({ id: Date.now(), title, start, end, tag: 'General', icon: 'fa-list-check', alarm: true, checked: false });
                 renderRoutines();
             }
         }
@@ -236,7 +265,7 @@
         }
 
         function deleteRoutine(index) {
-            if (confirm("Ee Routine delete cheyalani anukuntunnara?")) {
+            if (confirm("Delete this routine?")) {
                 slots.splice(index, 1);
                 renderRoutines();
             }
