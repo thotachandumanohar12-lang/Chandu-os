@@ -3,84 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chandu OS</title>
+    <title>CHANDU OS - Daily Routine Timetable & Alarms</title>
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-950 text-slate-100 p-4 min-h-screen">
+<body class="bg-[#0b0f17] text-slate-100 font-sans min-h-screen p-3 md:p-6">
 
-    <div class="max-w-md mx-auto space-y-4">
-        <!-- Header -->
-        <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-800">
-            <div>
-                <h1 class="text-xl font-bold tracking-wide">CHANDU OS <span class="text-xs bg-indigo-600 px-2 py-0.5 rounded">PRO</span></h1>
-                <p class="text-xs text-slate-400">Daily Routine Timetable & Alarms</p>
+    <div class="max-w-4xl mx-auto space-y-5">
+        
+        <!-- Header Section -->
+        <header class="flex flex-wrap items-center justify-between gap-4 bg-[#111827] p-4 rounded-2xl border border-slate-800/80 shadow-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg relative">
+                    C<span class="w-2.5 h-2.5 bg-rose-500 rounded-full absolute top-0 right-0 border-2 border-[#111827]"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-lg tracking-wider text-white">CHANDU OS</h1>
+                        <span class="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.2 rounded font-semibold">OS</span>
+                    </div>
+                    <p class="text-xs text-slate-400">Daily Routine Timetable & Alarms</p>
+                </div>
             </div>
-            <button onclick="addSlot()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-3 rounded-lg text-sm">+ Add Slot</button>
+
+            <div class="flex items-center gap-3">
+                <span class="hidden sm:flex items-center gap-1.5 text-xs bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 px-3 py-1.5 rounded-full font-medium">
+                    <i class="fa-solid font-bold fa-cloud-arrow-up"></i> Permanent Cloud Saved
+                </span>
+                
+                <div class="text-right">
+                    <div id="liveDate" class="text-[11px] font-semibold text-slate-400 tracking-wider">SAT, AUG 15, 2026</div>
+                    <div id="liveTime" class="text-emerald-400 font-mono text-lg font-bold">04:23:09 PM</div>
+                </div>
+
+                <button class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center hover:bg-rose-500/30">
+                    <i class="fa-regular fa-bell"></i>
+                </button>
+                <button class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-500/30">
+                    <i class="fa-solid fa-music"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Action Bar -->
+        <div class="flex justify-between items-center px-1">
+            <h2 class="text-base font-bold flex items-center gap-2 text-white">
+                <i class="fa-solid fa-list-check text-emerald-400"></i> Timetable Schedule
+            </h2>
+            <button onclick="addRoutine()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/10 transition">
+                <i class="fa-solid fa-plus"></i> Add Routine
+            </button>
         </div>
 
-        <!-- Routine Slots List -->
-        <div id="slotContainer" class="space-y-3">
-            <!-- Dynamic Slots Load Avthai -->
+        <!-- Routine Slots Container -->
+        <div id="routineList" class="space-y-3">
+            <!-- Dynamic UI elements load ikkade avthai -->
         </div>
+
     </div>
 
+    <!-- JavaScript Engine -->
     <script>
-        // LocalStorage nundi data load cheyadam
-        let slots = JSON.parse(localStorage.getItem('chandu_slots')) || [
-            { id: 1, title: 'Early Morning Wake Up', time: '05:30' },
-            { id: 2, title: 'Breakfast & Refresh', time: '08:00' }
+        // Initial Default Slots Data
+        let defaultSlots = [
+            { id: 1, title: 'Early Morning Wake Up', start: '05:30 AM', end: '06:00 AM', tag: 'Morning', icon: 'fa-sun', alarm: true, checked: false },
+            { id: 2, title: 'Early Morning Workout', start: '06:00 AM', end: '07:30 AM', tag: 'Sports', icon: 'fa-volleyball', alarm: true, checked: false },
+            { id: 3, title: 'Breakfast & Refreshment', start: '08:00 AM', end: '09:00 AM', tag: 'Meal', icon: 'fa-utensils', alarm: true, checked: false },
+            { id: 4, title: 'College / Work Time', start: '09:00 AM', end: '01:00 PM', tag: 'College', icon: 'fa-graduation-cap', alarm: true, checked: false },
+            { id: 5, title: 'Lunch Time', start: '01:00 PM', end: '02:00 PM', tag: 'Meal', icon: 'fa-utensils', alarm: true, checked: false }
         ];
 
-        // Screen meeda Slots Display Chese Function
-        function renderSlots() {
-            const container = document.getElementById('slotContainer');
-            container.innerHTML = '';
+        let slots = JSON.parse(localStorage.getItem('chandu_os_routines')) || defaultSlots;
+
+        // 1. Dynamic Live Clock & Date Update
+        function updateClock() {
+            const now = new Date();
+            const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+            document.getElementById('liveDate').innerText = now.toLocaleDateString('en-US', options).toUpperCase();
             
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            
+            document.getElementById('liveTime').innerText = `${hours.toString().padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // 2. Render Slots to Match UI Screenshot
+        function renderRoutines() {
+            const container = document.getElementById('routineList');
+            container.innerHTML = '';
+
             slots.forEach((slot, index) => {
                 container.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-800">
-                        <input type="text" value="${slot.title}" onchange="updateTitle(${index}, this.value)" class="bg-transparent text-slate-200 font-medium focus:outline-none w-1/2">
-                        <div class="flex items-center gap-2">
-                            <input type="time" value="${slot.time}" onchange="updateTime(${index}, this.value)" class="bg-slate-800 text-indigo-400 font-bold p-2 rounded-lg border border-slate-700 cursor-pointer text-sm">
-                            <button onclick="deleteSlot(${index})" class="text-red-400 hover:text-red-300 font-bold px-2">✕</button>
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-[#111827] p-3.5 rounded-2xl border border-slate-800/80 hover:border-slate-700 transition">
+                        <div class="flex items-center gap-3 min-w-[240px]">
+                            <input type="checkbox" ${slot.checked ? 'checked' : ''} onchange="toggleCheck(${index})" class="w-5 h-5 rounded-md border-slate-700 bg-slate-900 text-emerald-500 focus:ring-0 cursor-pointer">
+                            <div class="w-9 h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400">
+                                <i class="fa-solid ${slot.icon}"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-100 ${slot.checked ? 'line-through text-slate-500' : ''}">${slot.title}</h3>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="bg-emerald-950/60 text-emerald-400 text-xs px-2 py-0.5 rounded-full border border-emerald-800/40 font-mono font-medium flex items-center gap-1">
+                                        <i class="fa-regular fa-clock text-[10px]"></i> ${slot.start} – ${slot.end}
+                                    </span>
+                                    <span class="text-slate-500 text-xs">• ${slot.tag}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 ml-auto">
+                            <button onclick="editTime(${index})" class="bg-slate-800/90 hover:bg-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 font-medium transition">
+                                <i class="fa-regular fa-pen-to-square text-emerald-400"></i> Edit Time
+                            </button>
+                            <button onclick="toggleAlarm(${index})" class="${slot.alarm ? 'bg-rose-950/60 text-rose-400 border-rose-800/50' : 'bg-slate-800 text-slate-400 border-slate-700'} text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 font-semibold transition">
+                                <i class="fa-solid fa-bell"></i> ${slot.alarm ? 'Alarm ON' : 'Alarm OFF'}
+                            </button>
+                            <button onclick="deleteRoutine(${index})" class="text-slate-500 hover:text-rose-400 p-1.5 transition">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
                         </div>
                     </div>
                 `;
             });
-            localStorage.setItem('chandu_slots', JSON.stringify(slots));
+            localStorage.setItem('chandu_os_routines', JSON.stringify(slots));
         }
 
-        // 1. Add New Slot Function
-        function addSlot() {
-            const title = prompt("Slot Title Enter Cheyandi:", "New Task");
-            if (title) {
-                slots.push({ id: Date.now(), title: title, time: "09:00" });
-                renderSlots();
+        // 3. Edit Time Function
+        function editTime(index) {
+            const newStart = prompt("Start Time Enter Cheyandi (e.g. 05:30 AM):", slots[index].start);
+            const newEnd = prompt("End Time Enter Cheyandi (e.g. 06:30 AM):", slots[index].end);
+            if (newStart && newEnd) {
+                slots[index].start = newStart;
+                slots[index].end = newEnd;
+                renderRoutines();
             }
         }
 
-        // 2. Change Time Function
-        function updateTime(index, newTime) {
-            slots[index].time = newTime;
-            localStorage.setItem('chandu_slots', JSON.stringify(slots));
+        // 4. Add Routine Function
+        function addRoutine() {
+            const title = prompt("Routine Name Enter Cheyandi:", "Study Time");
+            const start = prompt("Start Time (e.g. 05:00 PM):", "05:00 PM");
+            const end = prompt("End Time (e.g. 06:30 PM):", "06:30 PM");
+            if (title && start && end) {
+                slots.push({
+                    id: Date.now(),
+                    title: title,
+                    start: start,
+                    end: end,
+                    tag: 'General',
+                    icon: 'fa-list-check',
+                    alarm: true,
+                    checked: false
+                });
+                renderRoutines();
+            }
         }
 
-        // 3. Change Title Function
-        function updateTitle(index, newTitle) {
-            slots[index].title = newTitle;
-            localStorage.setItem('chandu_slots', JSON.stringify(slots));
+        // 5. Toggle Alarm Function
+        function toggleAlarm(index) {
+            slots[index].alarm = !slots[index].alarm;
+            renderRoutines();
         }
 
-        // 4. Delete Slot Function
-        function deleteSlot(index) {
-            slots.splice(index, 1);
-            renderSlots();
+        // 6. Toggle Checkbox
+        function toggleCheck(index) {
+            slots[index].checked = !slots[index].checked;
+            renderRoutines();
         }
 
-        // App Start Ayyinapudu Slots Load Cheyali
-        document.addEventListener('DOMContentLoaded', renderSlots);
+        // 7. Delete Routine
+        function deleteRoutine(index) {
+            if (confirm("Ee Routine delete cheyalani anukuntunnara?")) {
+                slots.splice(index, 1);
+                renderRoutines();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderRoutines);
     </script>
 </body>
 </html>
