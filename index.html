@@ -84,9 +84,9 @@
             </div>
             <div class="flex justify-between items-baseline">
                 <div id="activeAlarmsCount" class="text-2xl font-extrabold text-white">8 Active</div>
-                <span class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 font-medium">Background Sync Active</span>
+                <span class="text-[11px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 font-medium">Background Service Worker Active</span>
             </div>
-            <p class="text-xs text-slate-400 mt-2">Plays loud digital beep sound & vibration automatically.</p>
+            <p class="text-xs text-slate-400 mt-2">Sends system notifications & sound alerts when time matches.</p>
         </div>
 
         <!-- Timetable Schedule Section Header -->
@@ -116,6 +116,16 @@
 
         let slots = JSON.parse(localStorage.getItem('chandu_os_routines')) || defaultSlots;
         let audioCtx = null;
+        let lastTriggeredMinute = "";
+
+        // Register Service Worker for Background Notification Alarms
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log("Service Worker Registered Successfully");
+            }).catch(err => {
+                console.log("Service Worker registration failed: ", err);
+            });
+        }
 
         function unlockAudio() {
             if (!audioCtx) {
@@ -124,7 +134,7 @@
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+            if (Notification.permission !== "granted") {
                 Notification.requestPermission();
             }
         }
@@ -138,7 +148,7 @@
                     audioCtx.resume();
                 }
 
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 6; i++) {
                     setTimeout(() => {
                         let osc = audioCtx.createOscillator();
                         let gainNode = audioCtx.createGain();
@@ -154,7 +164,7 @@
                         
                         osc.start();
                         osc.stop(audioCtx.currentTime + 0.35);
-                    }, i * 400);
+                    }, i * 350);
                 }
             } catch (e) {
                 console.log("Audio error:", e);
@@ -177,9 +187,14 @@
             }
 
             if (Notification.permission === "granted") {
-                new Notification("⏰ CHANDU OS ALARM!", {
-                    body: title,
-                    icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+                navigator.serviceWorker.ready.then(registration => {
+                    registration.showNotification("⏰ CHANDU OS ALARM!", {
+                        body: title,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png',
+                        vibrate: [1000, 500, 1000, 500, 1000],
+                        tag: 'chandu-alarm',
+                        renotify: true
+                    });
                 });
             }
         }
@@ -201,11 +216,13 @@
             let currentTimeStr = `${formattedHours}:${formattedMinutes} ${ampm}`;
             document.getElementById('liveTime').innerText = `${formattedHours}:${formattedMinutes}:${formattedSeconds} ${ampm}`;
 
-            if (seconds === 0) {
+            let currentMinuteKey = `${currentTimeStr}`;
+            if (lastTriggeredMinute !== currentMinuteKey) {
                 slots.forEach(slot => {
                     if (slot.alarm && !slot.checked) {
-                        if (slot.start.trim() === currentTimeStr) {
+                        if (slot.start.trim().toUpperCase() === currentMinuteKey) {
                             triggerAlarm(`It's time for: ${slot.title}`);
+                            lastTriggeredMinute = currentMinuteKey;
                         }
                     }
                 });
@@ -221,7 +238,7 @@
             let completedCount = 0;
             let activeAlarms = 0;
 
-            slots.forEach((slot, index) => {
+            slots.slice().forEach((slot, index) => {
                 if (slot.checked) completedCount++;
                 if (slot.alarm) activeAlarms++;
 
