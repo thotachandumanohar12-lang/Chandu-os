@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHANDU OS - Daily Routine Timetable & Alarms</title>
+  <link rel="manifest" href="data:application/json,{%22name%22:%22Chandu%20OS%22,%22short_name%22:%22ChanduOS%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22#0f172a%22,%22theme_color%22:%22#6366f1%22}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-['Plus_Jakarta_Sans'] min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/20">
+          C
+        </div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
+            CHANDU OS <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">PRO</span>
+          </h1>
+          <p class="text-xs text-slate-400">Daily Routine Timetable &amp; Background Alarms</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs">
+        <button id="permissionBtn" onclick="requestAllPermissions()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-2 rounded-lg flex items-center gap-2 transition shadow-md">
+          <i class="fa-solid fa-key"></i> Grant All Permissions
+        </button>
+        <button onclick="testAlarmSound()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-music"></i> Test Alarm
+        </button>
+        <div class="text-right hidden sm:block">
+          <div id="liveDate" class="text-slate-400">Loading date...</div>
+          <div id="liveClock" class="font-mono text-sm font-bold text-indigo-400">00:00:00 AM</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full space-y-6">
+
+    <!-- Permissions Alert Banner -->
+    <div id="permBanner" class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg"></i>
+        <span>Background Alarms allow cheyadaniki <strong>Grant All Permissions</strong> click cheyandi.</span>
+      </div>
+      <button onclick="requestAllPermissions()" class="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-amber-400 transition">
+        Enable Now
+      </button>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Today's Progress</p>
+          <p id="statsProgress" class="text-xl font-bold text-white mt-1">0 / 0 Slots Done</p>
+        </div>
+        <div class="w-12 h-12 rounded-full border-4 border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xs" id="statsPercent">
+          0%
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Current Status</p>
+          <p id="currentSlotTitle" class="text-lg font-semibold text-indigo-300 mt-1">Active Routine</p>
+        </div>
+        <i class="fa-solid fa-clock text-indigo-500 text-2xl"></i>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+        <div>
+          <p class="text-xs text-slate-400 font-medium">Alarm Engine</p>
+          <p class="text-lg font-semibold text-emerald-400 mt-1">Wake-Up Song Active</p>
+        </div>
+        <i class="fa-solid fa-bell text-emerald-400 text-2xl"></i>
+      </div>
+    </div>
+
+    <!-- Actions & Schedule Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+      <div class="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-calendar-days text-indigo-400"></i> Routine Timetable
+        </h2>
+        <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm px-4 py-2 rounded-lg flex items-center gap-2 transition">
+          <i class="fa-solid fa-plus"></i> Add Slot
+        </button>
+      </div>
+
+      <div class="divide-y divide-slate-800/60" id="routineList">
+        <!-- Rendered via Javascript -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Alarm Ringing Trigger Modal -->
+  <div id="alarmModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-indigo-500/50 max-w-sm w-full rounded-2xl p-6 text-center space-y-4 shadow-2xl">
+      <div class="w-16 h-16 rounded-full bg-indigo-500/20 border border-indigo-500 text-indigo-400 flex items-center justify-center mx-auto text-2xl animate-bounce">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <h3 class="text-xl font-extrabold text-white">ROUTINE ALARM!</h3>
+      <p id="alarmModalTitle" class="text-indigo-300 font-medium">Wake Up &amp; Get Ready</p>
+      <p class="text-xs text-slate-400">Playing Early Morning Wake-Up Melody</p>
+      <button onclick="stopAlarmSound()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-3 rounded-xl transition shadow-lg">
+        DISMISS ALARM
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Initial Default Routine Data
+    let routines = JSON.parse(localStorage.getItem('chandu_routines')) || [
+      { id: 1, time: "05:30", title: "Early Morning Wake Up", category: "morning", completed: false },
+      { id: 2, time: "07:30", title: "Breakfast & Refresh", category: "meal", completed: false },
+      { id: 3, time: "09:00", title: "College / Work Session", category: "college", completed: false },
+      { id: 4, time: "13:00", title: "Lunch Break", category: "meal", completed: false },
+      { id: 5, time: "17:00", title: "Sports & Fitness", category: "sports", completed: false },
+      { id: 6, time: "20:00", title: "Dinner & Relax", category: "meal", completed: false },
+      { id: 7, time: "21:30", title: "Reading & Study", category: "study", completed: false },
+      { id: 8, time: "22:30", title: "Night Sleep", category: "sleep", completed: false }
+    ];
+
+    let audioCtx = null;
+    let alarmInterval = null;
+
+    function saveRoutines() {
+      localStorage.setItem('chandu_routines', JSON.stringify(routines));
+      renderRoutines();
+    }
+
+    // Permission Management Function
+    async function requestAllPermissions() {
+      try {
+        if ('Notification' in window) {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            document.getElementById('permBanner').classList.add('hidden');
+            alert('✅ All Permissions Granted! Alarms will alert you in background.');
+          } else {
+            alert('⚠️ Notification permission denied.');
+          }
+        }
+        // Initialize Audio Context on user click
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
+    function renderRoutines() {
+      const container = document.getElementById('routineList');
+      container.innerHTML = '';
+
+      let doneCount = 0;
+      routines.forEach(r => {
+        if(r.completed) doneCount++;
+        const item = document.createElement('div');
+        item.className = "p-4 flex items-center justify-between gap-4 hover:bg-slate-800/40 transition";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <input type="checkbox" ${r.completed ? 'checked' : ''} onchange="toggleComplete(${r.id})" class="w-5 h-5 rounded border-slate-700 text-indigo-600 focus:ring-indigo-500 bg-slate-800">
+            <div>
+              <p class="font-bold text-white text-sm ${r.completed ? 'line-through text-slate-500' : ''}">${r.title}</p>
+              <p class="text-xs text-indigo-400 font-mono">${r.time}</p>
+            </div>
+          </div>
+          <button onclick="deleteRoutine(${r.id})" class="text-slate-500 hover:text-rose-400 text-sm p-1">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+
+      // Update Dashboard Stats
+      document.getElementById('statsProgress').innerText = `${doneCount} / ${routines.length} Slots Done`;
+      const pct = routines.length ? Math.round((doneCount / routines.length) * 100) : 0;
+      document.getElementById('statsPercent').innerText = `${pct}%`;
+    }
+
+    function toggleComplete(id) {
+      routines = routines.map(r => r.id === id ? { ...r, completed: !r.completed } : r);
+      saveRoutines();
+    }
+
+    function deleteRoutine(id) {
+      routines = routines.filter(r => r.id !== id);
+      saveRoutines();
+    }
+
+    // Web Audio Synthesizer Alarm Sound
+    function playAlarmSound() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.5);
+    }
+
+    function triggerAlarm(title) {
+      document.getElementById('alarmModalTitle').innerText = title;
+      document.getElementById('alarmModal').classList.remove('hidden');
+      
+      playAlarmSound();
+      alarmInterval = setInterval(playAlarmSound, 2000);
+
+      // System Lockscreen Notification
+      if (Notification.permission === 'granted') {
+        new Notification("⏰ Chandu OS Alarm", {
+          body: title,
+          icon: "https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+        });
+      }
+    }
+
+    function stopAlarmSound() {
+      document.getElementById('alarmModal').classList.add('hidden');
+      if (alarmInterval) clearInterval(alarmInterval);
+    }
+
+    function testAlarmSound() {
+      triggerAlarm("Test Wake-Up Alarm");
+    }
+
+    // Live Clock & Alarm Monitoring
+    setInterval(() => {
+      const now = new Date();
+      document.getElementById('liveClock').innerText = now.toLocaleTimeString();
+      document.getElementById('liveDate').innerText = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+      const currentHHMM = now.toTimeString().substring(0, 5);
+      const seconds = now.getSeconds();
+
+      if (seconds === 0) {
+        routines.forEach(r => {
+          if (r.time === currentHHMM && !r.completed) {
+            triggerAlarm(r.title);
+          }
+        });
+      }
+    }, 1000);
+
+    // Initial Load
+    renderRoutines();
+    if (Notification.permission === 'granted') {
+      document.getElementById('permBanner').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
